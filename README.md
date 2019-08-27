@@ -36,6 +36,8 @@ Click the Start/Stop menu item to start and stop Mosco
 
 Click View Log to see diagnostic messages
 
+Click Upload.. to show the Upload to App Store dialog. Enter your Apple ID and App Specific Password (1st step in [macOS App Notarization](http://docwiki.embarcadero.com/RADStudio/Rio/en/MacOS_Notarization)) and click Upload.
+
 Click PAServers.. to configure PAServer instances that can be started/stopped from the dialog. At present, only the port is configurable.
 
 ### Delphi Expert
