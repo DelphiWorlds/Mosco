@@ -90,6 +90,13 @@ Click Start to start the selected PASever, or Stop to stop it if already running
 
 ## Version History
 
+v1.2.1 (Oct 11th, 2021)
+
+* Added workaround for [Apple App Store deployment issue](https://quality.embarcadero.com/browse/RSP-35701)
+* Added option for notarization sleep time
+* Changed notarization so that apps deployed using Development config can be notarized
+* Fixed issue with notarization of installers
+
 v1.2.0 (Sept 10th, 2021) - First public version 
 
 
