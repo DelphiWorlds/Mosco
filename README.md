@@ -90,6 +90,13 @@ Click Start to start the selected PASever, or Stop to stop it if already running
 
 ## Version History
 
+v1.2.2 (Jan 4th, 2022)
+
+* Added support for Monkey Builder
+* Added option for obscuring passwords in messages window
+* Added providers list to notarization 
+* Various minor fixes
+
 v1.2.1 (Oct 11th, 2021)
 
 * Added workaround for [Apple App Store deployment issue](https://quality.embarcadero.com/browse/RSP-35701)
