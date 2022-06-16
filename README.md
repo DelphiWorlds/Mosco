@@ -90,6 +90,13 @@ Click Start to start the selected PASever, or Stop to stop it if already running
 
 ## Version History
 
+v1.3.0 (Jun 16th, 2022)
+
+* Added submenu for easier launching of PAServers
+* Added Refresh button to Certs and Profiles view
+* Fixed issue with notarization
+* Other minor fixes
+
 v1.2.2 (Jan 4th, 2022)
 
 * Added support for Monkey Builder
