@@ -18,6 +18,11 @@ Can be found [here](Docs/Readme.md).
 
 ## Version History
 
+v1.4.1 (Apr 15th, 2023)
+
+* Corrected which part of team info to use as TeamID 
+* Fixed random AVs that occur when executing processes
+
 v1.4.0 (Feb 26th, 2023)
 
 * Refactored server part as a REST server (was using ZeroMQ)
