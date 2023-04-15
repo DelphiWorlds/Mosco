@@ -26,7 +26,7 @@ v1.4.1 (Apr 15th, 2023)
 v1.4.0 (Feb 26th, 2023)
 
 * Refactored server part as a REST server (was using ZeroMQ)
-* Updated notarization process to use `notary` command where supported (Xcode 14+)
+* Updated notarization process to use `notarytool` command where supported (Xcode 14+)
 * Added certificate and profile functions that [Codex](https://github.com/DelphiWorlds/Codex) uses
 * Fixed launching instances of PAServer on macOS 13.0
 * Fixed a bug with SDK searching
