@@ -1,14 +1,14 @@
 # Mosco
 
-This repository is for documentation, the installers and for reporting issues
+This repository is for source for use in clients, documentation, and for reporting issues
+
+The latest release version can be downloaded [here](https://www.delphiworlds.com/mosco/latest), and older installers are [here](https://www.delphiworlds.com/mosco/older).
 
 ## Description
 
 Mosco is an application for macOS that provides functionality to help ease the iOS/macOS development process
 
 ## Installation
-
-Installers for Mosco can be found in the [Bin folder](Bin)
 
 Installation is straightforward - run the installer and follow the prompts
 
@@ -17,6 +17,12 @@ Installation is straightforward - run the installer and follow the prompts
 Can be found [here](Docs/Readme.md).
 
 ## Version History
+
+v1.5.0 (Nov 8th, 2023)
+
+* Refactored back end code - [Codex](https://github.com/DelphiWorlds/Codex) v1.6 or later will work with Mosco v1.5.0
+* Fixed issue with adding/removing PAServer entries
+* Minor tweaks 
 
 v1.4.1 (Apr 15th, 2023)
 
