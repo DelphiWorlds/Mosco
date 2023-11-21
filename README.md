@@ -20,7 +20,7 @@ Can be found [here](Docs/Readme.md).
 
 v1.5.0 (Nov 8th, 2023)
 
-* Refactored back end code - [Codex](https://github.com/DelphiWorlds/Codex) v1.6 or later will work with Mosco v1.5.0
+* Refactored back end code - [Codex](https://github.com/DelphiWorlds/Codex) v2.0.0 or later will work with Mosco v1.5.0
 * Fixed issue with adding/removing PAServer entries
 * Minor tweaks 
 
