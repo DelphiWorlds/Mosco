@@ -18,6 +18,12 @@ Can be found [here](Docs/Readme.md).
 
 ## Version History
 
+v1.6.0 (Jan 1st, 2024)
+
+* Added Deploy Extensions feature to back end - [Codex](https://github.com/DelphiWorlds/Codex) v2.1.0 or later can use this feature
+* Fixed lock ups that could occur when creating installer
+* Minor tweaks 
+
 v1.5.0 (Nov 8th, 2023)
 
 * Refactored back end code - [Codex](https://github.com/DelphiWorlds/Codex) v2.0.0 or later will work with Mosco v1.5.0
