@@ -23,8 +23,13 @@ const
   cAPIProfileFileGet = '/profiles/profilefile';
   cAPIProfilesGet = '/profiles/profiles';
   cAPISystemDevices = '/system/devices';
+  cAPISystemExtensionFilesGet = '/system/extensionfiles';
+  cAPISystemExtensionNamesGet = '/system/extensionnames';
   cAPISystemShowApp = '/system/showapp';
   cAPIXcodeFrameworksGet = '/xcode/frameworks';
+  cAPIXcodeGet = '/xcode/get';
+  cAPIXcodeList = '/xcode/list';
+  cAPIXcodeNotifyLaunch = '/xcode/notifylaunch';
   cAPIXcodeSDKsGet = '/xcode/sdks';
 
   cStatusCodeOK = 0;
@@ -34,6 +39,7 @@ const
   cStatusCodeUploadAppError = 902;
   cStatusCodeXcodeGetFrameworksError = 903;
   cStatusCodeXcodeGetSDKsError = 904;
+  cStatusCodeSystemDeployExtensionsError = 905;
 
 type
   TClientStatus = (Connected, Disconnected);
@@ -192,6 +198,7 @@ type
     User: string;
     Profile: string;
     FileName: string;
+    DeviceID: string;
     constructor Create(const AProfile, AFileName: string);
     function ToJSON: string;
     procedure FromJSONValue(const AValue: TJSONValue);
@@ -220,6 +227,7 @@ begin
   AValue.TryGetValue('user', User);
   AValue.TryGetValue('profile', Profile);
   AValue.TryGetValue('filename', FileName);
+  AValue.TryGetValue('deviceid', DeviceID);
 end;
 
 function TTargetInfo.ToJSON: string;
@@ -228,9 +236,10 @@ var
 begin
   LJSON := TJSONObject.Create;
   try
-    LJSON.AddPair('user', TJSONString.Create(User));
-    LJSON.AddPair('profile', TJSONString.Create(Profile));
-    LJSON.AddPair('filename', TJSONString.Create(FileName));
+    LJSON.AddPair('user', User);
+    LJSON.AddPair('profile', Profile);
+    LJSON.AddPair('filename', FileName);
+    LJSON.AddPair('deviceid', DeviceID);
     Result := LJSON.ToJSON;
   finally
     LJSON.Free;

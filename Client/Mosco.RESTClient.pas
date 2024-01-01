@@ -41,11 +41,14 @@ type
     function CanSend: Boolean;
     function GetFrameworks(const ASDK: string; out AFrameworks: TArray<string>): Boolean;
     function GetIdentities(out AIdentities: TIdentities): Boolean;
+    function GetExtensionFiles(const AFileNames: TArray<string>; out AFileData: TArray<string>): Boolean;
+    function GetExtensionNames(out AExtensions: TArray<string>): Boolean;
     function GetProfile(const ABundleId: string; const AProfileKind: Integer; out AProfile: TProfile): Boolean;
     function GetProfileFile(const ABundleId: string; const AProfileKind: Integer; const AFileName: string): Boolean;
     function GetProfiles(out AProfiles: TProfiles): Boolean;
     function GetSDKs(out ASDKs: TArray<string>): Boolean;
     function GetVersion(out AVersion: string): Boolean;
+    function NotifyLaunch(ATargetInfo: TTargetInfo): Boolean;
     function UploadIPA(ATargetInfo: TTargetInfo): Boolean;
     function ShowApp(ATargetInfo: TTargetInfo): Boolean;
     property Host: string read FHost write FHost;
@@ -197,6 +200,8 @@ begin
   try
     LURL := GetURL(APath);
     TOSLog.d('Execute: %s', [LURL]);
+    if not ARequest.IsEmpty then
+      TOSLog.d('%s', [TJSONHelper.Tidy(ARequest)]);
     LHTTP := THTTPClient.Create;
     try
       LHTTP.ConnectionTimeout := 5000;
@@ -235,6 +240,12 @@ begin
   end
 end;
 
+function TMoscoRESTClient.NotifyLaunch(ATargetInfo: TTargetInfo): Boolean;
+begin
+  ATargetInfo.User := TOSDevice.GetUsername;
+  Result := Execute(cAPIXcodeNotifyLaunch, ATargetInfo.ToJSON).IsOK;
+end;
+
 function TMoscoRESTClient.ShowApp(ATargetInfo: TTargetInfo): Boolean;
 //var
 //  LResponse: IMoscoResponse;
@@ -247,6 +258,34 @@ end;
 function TMoscoRESTClient.UploadIPA(ATargetInfo: TTargetInfo): Boolean;
 begin
   Result := False;  // TODO
+end;
+
+function TMoscoRESTClient.GetExtensionFiles(const AFileNames: TArray<string>; out AFileData: TArray<string>): Boolean;
+var
+  LResponse: IMoscoResponse;
+begin
+  Result := False;
+  LResponse := Execute(cAPISystemExtensionFilesGet, TJSONHelper.ToJSON(AFileNames, 'extensions'));
+  if LResponse.IsOK then
+  begin
+    Result := True;
+    AFileData := TJSONHelper.ToStringArray(TJSONArray(LResponse.Results));
+  end
+  else
+    TOSLog.d('GetExtensionFiles - %d: %s', [LResponse.StatusCode, LResponse.StatusMessage]);
+end;
+
+function TMoscoRESTClient.GetExtensionNames(out AExtensions: TArray<string>): Boolean;
+var
+  LResponse: IMoscoResponse;
+begin
+  Result := False;
+  LResponse := Execute(cAPISystemExtensionNamesGet);
+  if LResponse.IsOK then
+  begin
+    Result := True;
+    AExtensions := TJSONHelper.ToStringArray(TJSONArray(LResponse.Results));
+  end;
 end;
 
 function TMoscoRESTClient.GetFrameworks(const ASDK: string; out AFrameworks: TArray<string>): Boolean;
