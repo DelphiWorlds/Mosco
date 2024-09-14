@@ -26,6 +26,7 @@ const
   cAPISystemExtensionFilesGet = '/system/extensionfiles';
   cAPISystemExtensionNamesGet = '/system/extensionnames';
   cAPISystemShowApp = '/system/showapp';
+  cAPIXcodeDeployIOS = '/xcode/deployios';
   cAPIXcodeFrameworksGet = '/xcode/frameworks';
   cAPIXcodeGet = '/xcode/get';
   cAPIXcodeList = '/xcode/list';
@@ -40,11 +41,12 @@ const
   cStatusCodeXcodeGetFrameworksError = 903;
   cStatusCodeXcodeGetSDKsError = 904;
   cStatusCodeSystemDeployExtensionsError = 905;
+  cStatusCodeXcodeDeployIOSError = 906;
 
 type
   TClientStatus = (Connected, Disconnected);
 
-  TProfileKind = (AppStore, AdHoc, Development, DeveloperID);
+  TProfileKind = (AppStore, AdHoc, Development, Enterprise);
 
   TProfileState = (OnMac, OnAppStoreConnect);
 
@@ -63,14 +65,18 @@ type
     Certificates: TArray<TProfileCertificate>;
     CreationDate: TDateTime;
     Entitlements: string;
-    ExpiryDate: TDateTime;
+    EntitlementsFileName: string;
+    ExpirationDate: TDateTime;
     FileName: string;
     FileDateTime: TDateTime;
-    PlatformName: string;
+    Kind: TProfileKind;
+    Platforms: TArray<string>;
     ProfileName: string;
     ProvisionedDevices: TArray<string>;
     States: TProfileStates;
-    TaskAllow: Boolean;
+    TaskAllow: Boolean; // part of entitlements (<get-task-allow>)
+    TeamIdentifier: string; // part of entitlements
+    TeamIdentifiers: TArray<string>;
     UUID: string;
     function CertDescriptions: TArray<string>;
     procedure FromJSON(const AValue: string);
@@ -185,6 +191,7 @@ type
     PublicID: string;
     ShortName: string;
     WWDRTeamID: string;
+    KeyValue: string;
     function DisplayValue: string;
   end;
 
@@ -199,9 +206,39 @@ type
     Profile: string;
     FileName: string;
     DeviceID: string;
+    BuildKind: Integer;
     constructor Create(const AProfile, AFileName: string);
     function ToJSON: string;
     procedure FromJSONValue(const AValue: TJSONValue);
+  end;
+
+  TExtensionFile = record
+    FileName: string;
+    Content: string; // Compressed, Base64 encoded
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
+  end;
+
+  TExtensionFiles = TArray<TExtensionFile>;
+
+  TExtensionFilesHelper = record helper for TExtensionFiles
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
+  end;
+
+  TExtension = record
+    Folder: string;
+    Files: TExtensionFiles;
+    procedure AddFiles(const AFolder: string);
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
+  end;
+
+  TExtensions = TArray<TExtension>;
+
+  TExtensionsHelper = record helper for TExtensions
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
   end;
 
 implementation
@@ -212,6 +249,7 @@ uses
   Macapi.AppKit, Macapi.Helpers,
   Mosco.Logger, Mosco.Config,
   {$ENDIF}
+  DW.OSLog,
   DW.Base64.Helpers;
 
 { TTargetInfo }
@@ -228,6 +266,7 @@ begin
   AValue.TryGetValue('profile', Profile);
   AValue.TryGetValue('filename', FileName);
   AValue.TryGetValue('deviceid', DeviceID);
+  AValue.TryGetValue('buildkind', BuildKind);
 end;
 
 function TTargetInfo.ToJSON: string;
@@ -240,6 +279,7 @@ begin
     LJSON.AddPair('profile', Profile);
     LJSON.AddPair('filename', FileName);
     LJSON.AddPair('deviceid', DeviceID);
+    LJSON.AddPair('buildkind', BuildKind);
     Result := LJSON.ToJSON;
   finally
     LJSON.Free;
@@ -257,8 +297,9 @@ var
 begin
   Certificates := [];
   ProvisionedDevices := [];
+  Platforms := [];
   CreationDate := 0;
-  ExpiryDate := 0;
+  ExpirationDate := 0;
   AValue.TryGetValue('AppID', AppID);
   AValue.TryGetValue('BundleID', BundleID);
   AValue.TryGetValue('CertDescriptions', LJSONArray);
@@ -284,9 +325,9 @@ begin
   Entitlements := TBase64Helper.DecodeDecompress(LValue);
   AValue.TryGetValue('ExpiryDate', LValue);
   if not LValue.IsEmpty then
-    ExpiryDate := ISO8601ToDate(LValue);
+    ExpirationDate := ISO8601ToDate(LValue);
   AValue.TryGetValue('FileName', FileName);
-  AValue.TryGetValue('PlatformName', PlatformName);
+  AValue.TryGetValue('Platforms', Platforms);
   AValue.TryGetValue('ProfileName', ProfileName);
   AValue.TryGetValue('UUID', UUID);
   AValue.TryGetValue('TaskAllow', TaskAllow);
@@ -304,7 +345,7 @@ end;
 
 function TProfile.Exists: Boolean;
 begin
-  Result := not BundleID.IsEmpty and not ProfileName.IsEmpty;
+  Result := not AppID.IsEmpty and not ProfileName.IsEmpty;
 end;
 
 function TProfile.IsValid: Boolean;
@@ -335,10 +376,13 @@ begin
   LJSON.AddPair('BundleID', BundleID);
   LJSON.AddPair('CreationDate', DateToISO8601(CreationDate));
   LJSON.AddPair('Entitlements', TBase64Helper.CompressEncode(Entitlements));
-  LJSON.AddPair('ExpiryDate', DateToISO8601(ExpiryDate));
+  LJSON.AddPair('ExpiryDate', DateToISO8601(ExpirationDate));
   LJSON.AddPair('FileName', FileName);
   LJSON.AddPair('TaskAllow', TJSONBool.Create(TaskAllow));
-  LJSON.AddPair('PlatformName', PlatformName);
+  LJSONArray := TJSONArray.Create;
+  for I := 0 to Length(Platforms) - 1 do
+    LJSONArray.Add(Platforms[I]);
+  LJSON.AddPair('Platforms', LJSONArray);
   LJSON.AddPair('ProfileName', ProfileName);
   LJSON.AddPair('UUID', UUID);
   LJSONArray := TJSONArray.Create;
@@ -804,6 +848,123 @@ end;
 function TProvider.DisplayValue: string;
 begin
   Result := Format('%s (%s)', [Name, ShortName]);
+end;
+
+{ TExtension }
+
+procedure TExtension.AddFiles(const AFolder: string);
+var
+  LExtensionFile: TExtensionFile;
+  LFileName: string;
+begin
+  Folder := AFolder;
+  TOSLog.d('Folder: %s', [AFolder]);
+  for LFileName in TDirectory.GetFiles(Folder, '*.*', TSearchOption.soAllDirectories) do
+  begin
+    TOSLog.d('Full FileName: %s', [LFileName]);
+    LExtensionFile := Default(TExtensionFile);
+    LExtensionFile.FileName := LFileName.Substring(Length(Folder));
+    TOSLog.d('FileName: %s', [LExtensionFile.FileName]);
+    LExtensionFile.Content := TBase64Helper.CompressEncodeFromFile(LFileName);
+    Files := Files + [LExtensionFile];
+  end;
+end;
+
+procedure TExtension.FromJSONValue(const AValue: TJSONValue);
+var
+  LValue: TJSONValue;
+begin
+  AValue.TryGetValue('Folder', Folder);
+  if AValue.TryGetValue('Files', LValue) then
+    Files.FromJSONValue(LValue);
+end;
+
+function TExtension.ToJSONValue: TJSONValue;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  LJSON.AddPair('Folder', Folder);
+  LJSON.AddPair('Files', Files.ToJSONValue);
+  Result := LJSON;
+end;
+
+{ TExtensionFile }
+
+procedure TExtensionFile.FromJSONValue(const AValue: TJSONValue);
+begin
+  AValue.TryGetValue('FileName', FileName);
+  AValue.TryGetValue('Content', Content);
+end;
+
+function TExtensionFile.ToJSONValue: TJSONValue;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  LJSON.AddPair('FileName', FileName);
+  LJSON.AddPair('Content', Content);
+  Result := LJSON;
+end;
+
+{ TExtensionFilesHelper }
+
+procedure TExtensionFilesHelper.FromJSONValue(const AValue: TJSONValue);
+var
+  LJSON: TJSONArray;
+  I: Integer;
+  LExtensionFile: TExtensionFile;
+begin
+  if AValue is TJSONArray then
+  begin
+    LJSON := TJSONArray(AValue);
+    for I := 0 to LJSON.Count - 1 do
+    begin
+      LExtensionFile.FromJSONValue(LJSON.Items[I]);
+      Self := Self + [LExtensionFile];
+    end;
+  end;
+end;
+
+function TExtensionFilesHelper.ToJSONValue: TJSONValue;
+var
+  LJSONArray: TJSONArray;
+  I: Integer;
+begin
+  LJSONArray := TJSONArray.Create;
+  for I := 0 to Length(Self) - 1 do
+    LJSONArray.AddElement(Self[I].ToJSONValue);
+  Result := LJSONArray;
+end;
+
+{ TExtensionsHelper }
+
+procedure TExtensionsHelper.FromJSONValue(const AValue: TJSONValue);
+var
+  LJSON: TJSONArray;
+  I: Integer;
+  LExtension: TExtension;
+begin
+  if AValue is TJSONArray then
+  begin
+    LJSON := TJSONArray(AValue);
+    for I := 0 to LJSON.Count - 1 do
+    begin
+      LExtension.FromJSONValue(LJSON.Items[I]);
+      Self := Self + [LExtension];
+    end;
+  end;
+end;
+
+function TExtensionsHelper.ToJSONValue: TJSONValue;
+var
+  LJSONArray: TJSONArray;
+  I: Integer;
+begin
+  LJSONArray := TJSONArray.Create;
+  for I := 0 to Length(Self) - 1 do
+    LJSONArray.AddElement(Self[I].ToJSONValue);
+  Result := LJSONArray;
 end;
 
 end.
