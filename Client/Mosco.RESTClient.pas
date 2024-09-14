@@ -35,10 +35,10 @@ type
   private
     FHost: string;
     FPort: Integer;
-    function Execute(const APath: string; const ARequest: string = ''): IMoscoResponse;
     function GetURL(const APath: string): string;
   public
     function CanSend: Boolean;
+    function Execute(const APath: string; const ARequest: string = ''): IMoscoResponse;
     function GetFrameworks(const ASDK: string; out AFrameworks: TArray<string>): Boolean;
     function GetIdentities(out AIdentities: TIdentities): Boolean;
     function GetExtensionFiles(const AFileNames: TArray<string>; out AFileData: TArray<string>): Boolean;
@@ -131,7 +131,7 @@ end;
 
 function TMoscoResponse.GetStatusMessage: string;
 begin
-  FJSON.TryGetValue('StatusMessage', Result);
+  FJSON.TryGetValue('StatusText', Result);
 end;
 
 function TMoscoResponse.IsOK: Boolean;
@@ -220,6 +220,7 @@ begin
     finally
       LHTTP.Free;
     end;
+    TOSLog.d('Response:'#13#10'%s', [TJSONHelper.Tidy(LResponse.ContentAsString)]);
     Result := TMoscoResponse.Create(LResponse);
   except
     on E: Exception do
@@ -247,9 +248,6 @@ begin
 end;
 
 function TMoscoRESTClient.ShowApp(ATargetInfo: TTargetInfo): Boolean;
-//var
-//  LResponse: IMoscoResponse;
-//  LMessage: string;
 begin
   ATargetInfo.User := TOSDevice.GetUsername;
   Result := Execute(cAPISystemShowApp, ATargetInfo.ToJSON).IsOK;
