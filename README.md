@@ -18,6 +18,11 @@ Can be found [here](Docs/Readme.md).
 
 ## Version History
 
+v1.7.0 (Sep 15th, 2024)
+
+* Added back end function for IPA re-sign/build for apps with extensions - [Codex](https://github.com/DelphiWorlds/Codex) v2.4.0 or later can use this feature
+* Minor tweaks 
+
 v1.6.0 (Jan 1st, 2024)
 
 * Added Deploy Extensions feature to back end - [Codex](https://github.com/DelphiWorlds/Codex) v2.1.0 or later can use this feature
