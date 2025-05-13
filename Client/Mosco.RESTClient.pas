@@ -255,7 +255,8 @@ end;
 
 function TMoscoRESTClient.UploadIPA(ATargetInfo: TTargetInfo): Boolean;
 begin
-  Result := False;  // TODO
+  ATargetInfo.User := TOSDevice.GetUsername;
+  Result := Execute(cAPIALToolUploadIPA, ATargetInfo.ToJSON).IsOK;
 end;
 
 function TMoscoRESTClient.GetExtensionFiles(const AFileNames: TArray<string>; out AFileData: TArray<string>): Boolean;
