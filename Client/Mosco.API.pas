@@ -33,6 +33,7 @@ const
   cAPIXcodeList = '/xcode/list';
   cAPIXcodeNotifyLaunch = '/xcode/notifylaunch';
   cAPIXcodeSDKsGet = '/xcode/sdks';
+  cAPIXcodeSDKInfoGet = '/xcode/sdkinfo';
 
   cStatusCodeOK = 0;
 
@@ -238,6 +239,33 @@ type
   TExtensions = TArray<TExtension>;
 
   TExtensionsHelper = record helper for TExtensions
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
+  end;
+
+  TSDK = record
+    Name: string;
+    Path: string;
+    Build: string;
+    Version: string;
+    IsSimulator: Boolean;
+    constructor Create(const AValue: TJSONValue);
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
+  end;
+
+  TSDKs = TArray<TSDK>;
+
+  TXcodeInfo = record
+    Version: string;
+    Build: string;
+    procedure FromJSONValue(const AValue: TJSONValue);
+    function ToJSONValue: TJSONValue;
+  end;
+
+  TSDKInfo = record
+    Xcode: TXcodeInfo;
+    SDKs: TSDKs;
     procedure FromJSONValue(const AValue: TJSONValue);
     function ToJSONValue: TJSONValue;
   end;
@@ -966,6 +994,83 @@ begin
   for I := 0 to Length(Self) - 1 do
     LJSONArray.AddElement(Self[I].ToJSONValue);
   Result := LJSONArray;
+end;
+
+{ TSDK }
+
+constructor TSDK.Create(const AValue: TJSONValue);
+begin
+  FromJSONValue(AValue);
+end;
+
+procedure TSDK.FromJSONValue(const AValue: TJSONValue);
+begin
+  AValue.TryGetValue('Name', Name);
+  AValue.TryGetValue('Path', Path);
+  AValue.TryGetValue('Build', Build);
+  AValue.TryGetValue('Version', Version);
+  AValue.TryGetValue('IsSimulator', IsSimulator);
+end;
+
+function TSDK.ToJSONValue: TJSONValue;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  LJSON.AddPair('Name', Name);
+  LJSON.AddPair('Path', Path);
+  LJSON.AddPair('Build', Build);
+  LJSON.AddPair('Version', Version);
+  LJSON.AddPair('IsSimulator', IsSimulator);
+  Result := LJSON;
+end;
+
+{ TXcodeInfo }
+
+procedure TXcodeInfo.FromJSONValue(const AValue: TJSONValue);
+begin
+  AValue.TryGetValue('Version', Version);
+  AValue.TryGetValue('Build', Build);
+end;
+
+function TXcodeInfo.ToJSONValue: TJSONValue;
+var
+  LJSON: TJSONObject;
+begin
+  LJSON := TJSONObject.Create;
+  LJSON.AddPair('Version', Version);
+  LJSON.AddPair('Build', Build);
+  Result := LJSON;
+end;
+
+{ TSDKInfo }
+
+procedure TSDKInfo.FromJSONValue(const AValue: TJSONValue);
+var
+  LMember, LValue: TJSONValue;
+begin
+  if AValue.TryGetValue('Xcode', LMember) then
+    Xcode.FromJSONValue(LMember);
+  if AValue.TryGetValue('SDKs', LMember) and (LMember is TJSONArray) then
+  begin
+    for LValue in TJSONArray(LMember) do
+      SDKs := SDKs + [TSDK.Create(LValue)];
+  end;
+end;
+
+function TSDKInfo.ToJSONValue: TJSONValue;
+var
+  LJSON: TJSONObject;
+  LArray: TJSONArray;
+  LSDK: TSDK;
+begin
+  LJSON := TJSONObject.Create;
+  LJSON.AddPair('Xcode', Xcode.ToJSONValue);
+  LArray := TJSONArray.Create;
+  for LSDK in SDKs do
+    LArray.AddElement(LSDK.ToJSONValue);
+  LJSON.AddPair('SDKs', LArray);
+  Result := LJSON;
 end;
 
 end.

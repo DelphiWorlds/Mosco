@@ -46,6 +46,7 @@ type
     function GetProfile(const ABundleId: string; const AProfileKind: Integer; out AProfile: TProfile): Boolean;
     function GetProfileFile(const ABundleId: string; const AProfileKind: Integer; const AFileName: string): Boolean;
     function GetProfiles(out AProfiles: TProfiles): Boolean;
+    function GetSDKInfo(out ASDKInfo: TSDKInfo): Boolean;
     function GetSDKs(out ASDKs: TArray<string>): Boolean;
     function GetVersion(out AVersion: string): Boolean;
     function NotifyLaunch(ATargetInfo: TTargetInfo): Boolean;
@@ -358,6 +359,16 @@ begin
   Result := LResponse.IsOK;
   if Result then
     AProfiles.FromJsonValue(LResponse.Results);
+end;
+
+function TMoscoRESTClient.GetSDKInfo(out ASDKInfo: TSDKInfo): Boolean;
+var
+  LResponse: IMoscoResponse;
+begin
+  LResponse := Execute(cAPIXcodeSDKInfoGet);
+  Result := LResponse.IsOK;
+  if Result then
+    ASDKInfo.FromJSONValue(LResponse.Results);
 end;
 
 function TMoscoRESTClient.GetSDKs(out ASDKs: TArray<string>): Boolean;
