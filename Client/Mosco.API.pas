@@ -17,6 +17,7 @@ uses
   System.JSON, System.Types;
 
 const
+  cAPIALToolUploadIPA = '/altool/uploadipa';
   cAPIIdentitiesGet = '/profiles/identities';
   cAPIPing = '/ping';
   cAPIProfileGet = '/profiles/profile';
