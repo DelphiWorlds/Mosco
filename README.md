@@ -18,6 +18,14 @@ Can be found [here](Docs/Readme.md).
 
 ## Version History
 
+v1.8.0 (Oct 24th, 2025)
+
+* Added backend functions for retrieving SDK info from the Mac
+* UI improvements
+* Fixed Rebuild IPA process that Codex uses to rebuild IPA files which correctly signs/packages the IPA
+* Fixed fetching of Providers for use with Notarization to work with newer versions of Xcode
+* Fixed parsing of provisioning profiles to correctly identify AdHoc profiles
+
 v1.7.0 (Sep 15th, 2024)
 
 * Added back end function for IPA re-sign/build for apps with extensions - [Codex](https://github.com/DelphiWorlds/Codex) v2.4.0 or later can use this feature
